@@ -13,13 +13,13 @@ impl Cell {
 
 #[derive(Debug, Copy, Clone)]
 struct PartNumber {
-    start: u32,
-    end: u32,
+    start: usize,
+    end: usize,
     value: usize,
 }
 
 impl PartNumber {
-    fn contains(&self, x: u32) -> bool {
+    fn contains(&self, x: usize) -> bool {
         x >= self.start && x <= self.end
     }
 }
@@ -38,17 +38,15 @@ impl Row {
         let mut start: Option<usize> = None;
         for (i, cell) in items.iter().enumerate() {
             if cell.is_empty() {
-                if start.is_some() {
-                    let s = start.unwrap() as u32;
+                if let Some(s) = start {
                     part_numbers.push(PartNumber {
-                        start: start.unwrap() as u32,
-                        end: (i - 1) as u32,
+                        start: start.unwrap(),
+                        end: i - 1,
                         value: {
                             let mut v = String::new();
 
-                            for x in s..(i as u32) {
-                                let thing =
-                                    items.get(x as usize).expect("cell should be something");
+                            for x in s..i {
+                                let thing = items.get(x).expect("cell should be something");
                                 v.push(thing.0)
                             }
 
@@ -63,13 +61,12 @@ impl Row {
             match start {
                 Some(s) if i == items.len() - 1 => {
                     part_numbers.push(PartNumber {
-                        start: s as u32,
-                        end: i as u32,
+                        start: s,
+                        end: i,
                         value: {
                             let mut v = String::new();
-                            for x in (s as u32)..((i + 1) as u32) {
-                                let thing =
-                                    items.get(x as usize).expect("cell should be something");
+                            for x in s..(i + 1) {
+                                let thing = items.get(x).expect("cell should be something");
                                 v.push(thing.0)
                             }
                             v.parse::<usize>().expect("parsing error")
@@ -78,14 +75,13 @@ impl Row {
                 }
                 Some(s) if cell.is_identifier() => {
                     part_numbers.push(PartNumber {
-                        start: s as u32,
-                        end: (i - 1) as u32,
+                        start: s,
+                        end: i - 1,
                         value: {
                             let mut v = String::new();
 
-                            for x in (s as u32)..(i as u32) {
-                                let thing =
-                                    items.get(x as usize).expect("cell should be something");
+                            for x in s..i {
+                                let thing = items.get(x).expect("cell should be something");
                                 v.push(thing.0)
                             }
 
@@ -124,7 +120,7 @@ impl Grid {
     }
 }
 
-pub fn solution(input: &str) -> u32 {
+pub fn solution(input: &str) -> usize {
     let grid = Grid::new(input);
     let mut total = 0;
 
@@ -141,14 +137,14 @@ pub fn solution(input: &str) -> u32 {
                 .iter()
                 .flat_map(|row| &row.part_numbers)
                 .filter(|part_number| {
-                    part_number.contains(j as u32)
-                        || part_number.contains(if j == 0 { 0 } else { j - 1 } as u32)
-                        || part_number.contains((j + 1) as u32)
+                    part_number.contains(j)
+                        || part_number.contains(if j == 0 { 0 } else { j - 1 })
+                        || part_number.contains(j + 1)
                 })
                 .collect::<Vec<_>>();
 
             if search_space_parts.len() == 2 {
-                total += (search_space_parts[0].value * search_space_parts[1].value) as u32;
+                total += search_space_parts[0].value * search_space_parts[1].value;
             }
         }
     }
